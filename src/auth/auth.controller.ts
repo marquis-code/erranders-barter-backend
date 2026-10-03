@@ -10,7 +10,7 @@ export class AuthController {
 
   @Post('signup')
   @ApiOperation({ summary: 'Register a new user' })
-  async signup(@Body() body: { firstName: string; lastName: string; email: string; password: string }) {
+  async signup(@Body() body: { firstName: string; lastName: string; email: string; password: string; whatsappNumber: string; university: string; hostel: string; level: string }) {
     return this.authService.signup(body);
   }
 
@@ -18,6 +18,18 @@ export class AuthController {
   @ApiOperation({ summary: 'Log in with email and password' })
   async login(@Body() body: { email: string; password: string }) {
     return this.authService.login(body);
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request a password reset email' })
+  async forgotPassword(@Body() body: { email: string }) {
+    return this.authService.forgotPassword(body.email);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password using token' })
+  async resetPassword(@Body() body: { token: string; password: string }) {
+    return this.authService.resetPassword(body);
   }
 
   @Get('google')

@@ -16,12 +16,21 @@ export class ItemsService {
     const filter: any = { status: ItemStatus.ACTIVE };
     if (query.location) filter.location = query.location;
     if (query.type) filter.type = query.type;
+    if (query.category) filter.category = query.category;
     if (query.search || query.q) filter.$text = { $search: query.search || query.q };
     if (query.budget) filter.price = { $lte: Number(query.budget) };
 
     let dbQuery = this.itemModel.find(filter).populate('sellerId', 'firstName lastName hostel level rating isVerified avatar');
-    if (query.search || query.q) dbQuery = dbQuery.sort({ score: { $meta: 'textScore' }, createdAt: -1 });
-    else dbQuery = dbQuery.sort({ createdAt: -1 });
+    
+    if (query.sort === 'price_asc') {
+      dbQuery = dbQuery.sort({ price: 1 });
+    } else if (query.sort === 'price_desc') {
+      dbQuery = dbQuery.sort({ price: -1 });
+    } else if (query.search || query.q) {
+      dbQuery = dbQuery.sort({ score: { $meta: 'textScore' }, createdAt: -1 });
+    } else {
+      dbQuery = dbQuery.sort({ createdAt: -1 });
+    }
 
     return dbQuery.limit(50).exec();
   }

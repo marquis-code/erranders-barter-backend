@@ -6,6 +6,9 @@ import { UsersModule } from './users/users.module';
 import { ItemsModule } from './items/items.module';
 import { EscrowModule } from './escrow/escrow.module';
 import { UploadModule } from './upload/upload.module';
+import { SettingsModule } from './settings/settings.module';
+import { CategoriesModule } from './categories/categories.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import { UploadModule } from './upload/upload.module';
     ItemsModule,
     EscrowModule,
     UploadModule,
+    SettingsModule,
+    CategoriesModule,
+    ChatModule,
   ],
 })
 export class AppModule {}

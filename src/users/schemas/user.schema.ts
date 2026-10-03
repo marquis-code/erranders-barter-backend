@@ -22,6 +22,12 @@ export class User extends Document {
   googleId: string;
 
   @Prop()
+  whatsappNumber: string;
+
+  @Prop()
+  university: string;
+
+  @Prop()
   avatar: string;
 
   @Prop()

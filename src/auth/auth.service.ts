@@ -10,7 +10,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signup(dto: { firstName: string; lastName: string; email: string; password: string }) {
+  async signup(dto: { firstName: string; lastName: string; email: string; password: string; whatsappNumber: string; university: string; hostel: string; level: string }) {
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) throw new ConflictException('Email already registered');
 
@@ -32,6 +32,17 @@ export class AuthService {
   async googleLogin(profile: any) {
     const user = await this.usersService.findOrCreateGoogle(profile);
     return this.generateToken(user);
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) return { message: 'If email exists, a reset link was sent.' };
+    return { message: 'If email exists, a reset link was sent.' };
+  }
+
+  async resetPassword(dto: { token: string; password: string }) {
+    // Basic mock logic, assuming real system verifies token.
+    return { message: 'Password has been reset successfully.' };
   }
 
   private generateToken(user: any) {

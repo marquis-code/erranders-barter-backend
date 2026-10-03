@@ -23,6 +23,10 @@ export class UsersService {
     return new this.userModel(data).save();
   }
 
+  async update(id: string, data: Partial<User>): Promise<User> {
+    return this.userModel.findByIdAndUpdate(id, data, { new: true }).exec();
+  }
+
   async findOrCreateGoogle(profile: any): Promise<User> {
     let user = await this.userModel.findOne({ googleId: profile.id }).exec();
     if (!user) {
