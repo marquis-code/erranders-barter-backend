@@ -14,12 +14,13 @@ export class UsersController {
   @Get('me/stats')
   @UseGuards(AuthGuard('jwt'))
   async getMyStats(@Req() req) {
-    return {
-      activeListings: 4, 
-      completedTrades: 12, 
-      escrowBalance: 45000,
-      sellerRating: 4.8
-    };
+    return this.usersService.getMyStats(req.user.userId);
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  async getMe(@Req() req) {
+    return this.usersService.findById(req.user.userId);
   }
 
   @Patch('me')

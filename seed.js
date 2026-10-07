@@ -1,91 +1,68 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
-const itemSchema = new mongoose.Schema({
-  sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  title: { type: String, required: true },
-  description: String,
-  price: Number,
-  swapPreference: String,
-  type: { type: String, enum: ['sell', 'swap', 'service'], default: 'sell' },
-  status: { type: String, enum: ['active', 'pending', 'sold', 'completed'], default: 'active' },
-  location: { type: String, required: true },
-  category: String,
-  images: [String],
-  videos: [String],
+const MONGODB_URI = "mongodb+srv://abahmarquis_db_user:RnmGsoHqJxPOnoFH@erranders-barter.gkrvfwj.mongodb.net/?appName=erranders-barter";
+
+const UserSchema = new mongoose.Schema({
+  firstName: String, lastName: String, email: String, password: { type: String, select: false },
+  isVerified: Boolean, whatsappNumber: String, university: String, avatar: String,
+  hostel: String, level: String, rating: Number, totalTrades: Number
 }, { timestamps: true });
 
-const Item = mongoose.model('Item', itemSchema);
+const ItemSchema = new mongoose.Schema({
+  sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  title: String, description: String, price: Number, swapPreference: String,
+  type: String, status: String, location: String, category: String, images: [String], videos: [String]
+}, { timestamps: true });
 
-const userSchema = new mongoose.Schema({
-  email: String,
-});
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model('User', UserSchema);
+const Item = mongoose.model('Item', ItemSchema);
 
-const seedDatabase = async () => {
-  try {
-    await mongoose.connect('mongodb+srv://abahmarquis_db_user:RnmGsoHqJxPOnoFH@erranders-barter.gkrvfwj.mongodb.net/?appName=erranders-barter', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+async function seed() {
+  await mongoose.connect(MONGODB_URI);
+  console.log('Connected to DB');
+
+  const email = 'testseller@example.com';
+  let seller = await User.findOne({ email });
+
+  if (!seller) {
+    const salt = await bcrypt.genSalt(10);
+    const password = await bcrypt.hash('password123', salt);
+    seller = new User({
+      firstName: 'Test',
+      lastName: 'Seller',
+      email,
+      password,
+      isVerified: true,
+      whatsappNumber: '08012345678',
+      university: 'UNILAG',
+      hostel: 'Moremi Hall',
+      level: '400L',
+      rating: 4.8,
+      totalTrades: 12
     });
-    console.log('Connected to MongoDB');
-
-    let user = await User.findOne();
-    if (!user) {
-      user = await User.create({ email: 'seeduser@example.com' });
-    }
-
-    const items = [
-      {
-        sellerId: user._id,
-        title: 'iPhone 13 Pro',
-        description: 'Excellent condition, 256GB, Sierra Blue.',
-        price: 700,
-        type: 'sell',
-        location: 'New York, NY',
-        category: 'Electronics',
-        images: ['https://images.unsplash.com/photo-1632661674596-df8be070a5c5?q=80&w=2000&auto=format&fit=crop'],
-      },
-      {
-        sellerId: user._id,
-        title: 'MacBook Air M1',
-        description: 'Looking to swap for a gaming PC.',
-        swapPreference: 'Gaming PC with RTX 3060 or better',
-        type: 'swap',
-        location: 'Austin, TX',
-        category: 'Computers',
-        images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=2000&auto=format&fit=crop'],
-      },
-      {
-        sellerId: user._id,
-        title: 'Plumbing Services',
-        description: 'Experienced plumber for home repairs.',
-        price: 50,
-        type: 'service',
-        location: 'Chicago, IL',
-        category: 'Services',
-        images: ['https://images.unsplash.com/photo-1585704032915-c3400ca199e7?q=80&w=2000&auto=format&fit=crop'],
-      },
-      {
-        sellerId: user._id,
-        title: 'Sony A7III Camera',
-        description: 'Camera body only, lightly used.',
-        price: 1200,
-        type: 'sell',
-        location: 'Seattle, WA',
-        category: 'Photography',
-        images: ['https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000&auto=format&fit=crop'],
-      }
-    ];
-
-    await Item.deleteMany({});
-    await Item.insertMany(items);
-    console.log('Database seeded with products!');
-
-    mongoose.disconnect();
-  } catch (error) {
-    console.error('Error seeding database:', error);
-    mongoose.disconnect();
+    await seller.save();
+    console.log('Created test seller:', seller._id);
+  } else {
+    console.log('Test seller already exists:', seller._id);
   }
-};
 
-seedDatabase();
+  // Create an item for this seller
+  const item = new Item({
+    sellerId: seller._id,
+    title: 'iPhone 13 Pro Max - Used',
+    description: 'Fairly used iPhone 13 Pro Max. 256GB. Battery health 89%. Selling to upgrade to 15.',
+    price: 950000,
+    type: 'sell',
+    status: 'active',
+    location: 'Moremi Hall, UNILAG',
+    category: 'electronics',
+    images: ['https://images.unsplash.com/photo-1632661674596-df8be070a5c5?q=80&w=600&auto=format&fit=crop']
+  });
+  await item.save();
+  console.log('Created test item for seller:', item._id);
+
+  mongoose.disconnect();
+}
+
+seed().catch(console.error);

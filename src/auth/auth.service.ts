@@ -2,6 +2,8 @@ import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
 @Injectable()
 export class AuthService {
@@ -29,9 +31,37 @@ export class AuthService {
     return this.generateToken(user);
   }
 
-  async googleLogin(profile: any) {
-    const user = await this.usersService.findOrCreateGoogle(profile);
-    return this.generateToken(user);
+  async firebaseLogin(idToken: string) {
+    if (!getApps().length) {
+      initializeApp({
+        credential: cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        }),
+      });
+    }
+
+    try {
+      const decodedToken = await getAuth().verifyIdToken(idToken);
+      const email = decodedToken.email;
+      if (!email) throw new UnauthorizedException('No email found in token');
+
+      const names = (decodedToken.name || '').split(' ');
+      const profile = {
+        id: decodedToken.uid,
+        emails: [{ value: email }],
+        name: {
+          givenName: names[0] || 'User',
+          familyName: names.slice(1).join(' ') || ''
+        },
+        photos: [{ value: decodedToken.picture || '' }]
+      };
+      const user = await this.usersService.findOrCreateGoogle(profile);
+      return this.generateToken(user);
+    } catch (e) {
+      throw new UnauthorizedException('Invalid Firebase Token');
+    }
   }
 
   async forgotPassword(email: string) {

@@ -31,7 +31,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!token) return socket.disconnect();
       
       const payload = this.jwtService.verify(token.replace('Bearer ', ''), {
-        secret: this.configService.get<string>('JWT_SECRET')
+        secret: this.configService.get<string>('JWT_SECRET') || 'dev-secret-key'
       });
       socket.data.userId = payload.sub;
       socket.join(payload.sub); // Join a personal room for direct user notifications
