@@ -26,6 +26,10 @@ export class ChatService {
     return chat;
   }
 
+  async getChatById(chatId: string) {
+    return this.chatModel.findById(chatId).exec();
+  }
+
   async getChatsForUser(userId: string) {
     return this.chatModel.find({ participants: userId })
       .populate('participants', 'firstName lastName email')

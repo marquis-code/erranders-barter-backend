@@ -23,13 +23,13 @@ export class ItemsService {
     let dbQuery = this.itemModel.find(filter).populate('sellerId', 'firstName lastName hostel level rating isVerified avatar');
     
     if (query.sort === 'price_asc') {
-      dbQuery = dbQuery.sort({ price: 1 });
+      dbQuery = dbQuery.sort({ isPromoted: -1, price: 1 });
     } else if (query.sort === 'price_desc') {
-      dbQuery = dbQuery.sort({ price: -1 });
+      dbQuery = dbQuery.sort({ isPromoted: -1, price: -1 });
     } else if (query.search || query.q) {
-      dbQuery = dbQuery.sort({ score: { $meta: 'textScore' }, createdAt: -1 });
+      dbQuery = dbQuery.sort({ score: { $meta: 'textScore' }, isPromoted: -1, createdAt: -1 });
     } else {
-      dbQuery = dbQuery.sort({ createdAt: -1 });
+      dbQuery = dbQuery.sort({ isPromoted: -1, createdAt: -1 });
     }
 
     return dbQuery.limit(50).exec();
@@ -39,5 +39,9 @@ export class ItemsService {
     const item = await this.itemModel.findById(id).populate('sellerId', 'firstName lastName hostel level rating isVerified avatar totalTrades').exec();
     if (!item) throw new NotFoundException('Item not found');
     return item;
+  }
+
+  async findMyListings(userId: string): Promise<Item[]> {
+    return this.itemModel.find({ sellerId: userId }).sort({ createdAt: -1 }).exec();
   }
 }

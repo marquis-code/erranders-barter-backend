@@ -27,4 +27,12 @@ export class ItemsController {
   async create(@Body() body: any, @Req() req) {
     return this.itemsService.create(body, req.user.userId);
   }
+
+  @Get('me/listings')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List current user active listings' })
+  async findMyListings(@Req() req) {
+    return this.itemsService.findMyListings(req.user.userId);
+  }
 }

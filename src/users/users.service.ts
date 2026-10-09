@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './schemas/user.schema';
@@ -33,6 +33,22 @@ export class UsersService {
     return this.userModel.findByIdAndUpdate(id, data, { new: true }).exec();
   }
 
+  async incrementWalletBalance(id: string, amount: number): Promise<User> {
+    return this.userModel.findByIdAndUpdate(id, { $inc: { walletBalance: amount } }, { new: true }).exec();
+  }
+
+  async withdraw(userId: string, amount: number) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+    if (amount <= 0) throw new BadRequestException('Amount must be greater than zero');
+    if ((user.walletBalance || 0) < amount) {
+      throw new BadRequestException('Insufficient wallet balance');
+    }
+    
+    // Simulating a real bank withdrawal via payment provider
+    return this.userModel.findByIdAndUpdate(userId, { $inc: { walletBalance: -amount } }, { new: true }).exec();
+  }
+
   async getMyStats(userId: string) {
     const activeListings = await this.itemModel.countDocuments({
       sellerId: userId,
@@ -59,6 +75,7 @@ export class UsersService {
       activeListings,
       completedTrades,
       escrowBalance,
+      walletBalance: user?.walletBalance || 0,
       sellerRating,
     };
   }

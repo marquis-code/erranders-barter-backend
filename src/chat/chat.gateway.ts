@@ -64,7 +64,40 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.replyTo
     );
 
-    // Broadcast to everyone in the chat
+    // Broadcast to everyone in the chat (for the specific chat window)
     this.server.to(data.chatId).emit('newMessage', message);
+
+    // Also broadcast a global notification to each participant's personal room
+    const chat = await this.chatService.getChatById(data.chatId);
+    if (chat && chat.participants) {
+      chat.participants.forEach((participant) => {
+        if (participant.toString() !== userId) {
+          this.server.to(participant.toString()).emit('chatNotification', {
+            chatId: data.chatId,
+            message: message
+          });
+        }
+      });
+    }
+  }
+
+  @SubscribeMessage('call-offer')
+  handleCallOffer(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    socket.to(data.chatId).emit('call-offer', data);
+  }
+
+  @SubscribeMessage('call-answer')
+  handleCallAnswer(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    socket.to(data.chatId).emit('call-answer', data);
+  }
+
+  @SubscribeMessage('call-ice-candidate')
+  handleCallIceCandidate(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    socket.to(data.chatId).emit('call-ice-candidate', data);
+  }
+
+  @SubscribeMessage('call-end')
+  handleCallEnd(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    socket.to(data.chatId).emit('call-end', data);
   }
 }

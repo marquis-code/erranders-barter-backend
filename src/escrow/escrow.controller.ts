@@ -12,7 +12,7 @@ export class EscrowController {
 
   @Post('initiate')
   @ApiOperation({ summary: 'Initiate an escrow transaction' })
-  async initiate(@Body() body: { sellerId: string; itemId: string; amount: number }, @Req() req) {
+  async initiate(@Body() body: { sellerId: string; itemId: string; amount: number, deliveryMethod?: string, deliveryAddress?: string, paymentReference?: string, deliveryFee?: number }, @Req() req) {
     return this.escrowService.initiate({ ...body, buyerId: req.user.userId });
   }
 
@@ -38,5 +38,17 @@ export class EscrowController {
   @ApiOperation({ summary: 'List all transactions (Admin)' })
   async allTransactions() {
     return this.escrowService.findAll();
+  }
+
+  @Patch(':id/accept-negotiation')
+  @ApiOperation({ summary: 'Accept a delivery negotiation from an Errander' })
+  async acceptNegotiation(@Param('id') id: string, @Req() req) {
+    return this.escrowService.acceptNegotiation(id, req.user.userId);
+  }
+
+  @Patch(':id/counter-negotiation')
+  @ApiOperation({ summary: 'Counter a delivery negotiation from an Errander' })
+  async counterNegotiation(@Param('id') id: string, @Body() body: { amount: number }, @Req() req) {
+    return this.escrowService.counterNegotiation(id, req.user.userId, body.amount);
   }
 }

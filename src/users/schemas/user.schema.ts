@@ -41,6 +41,9 @@ export class User extends Document {
 
   @Prop({ default: 0 })
   totalTrades: number;
+
+  @Prop({ default: 0 })
+  walletBalance: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -38,6 +38,9 @@ export class Item extends Document {
 
   @Prop([String])
   videos: string[];
+
+  @Prop({ default: false })
+  isPromoted: boolean;
 }
 
 export const ItemSchema = SchemaFactory.createForClass(Item);
